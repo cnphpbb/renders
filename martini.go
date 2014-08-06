@@ -1,10 +1,9 @@
-package render
+package renders
 
 import (
 	"bytes"
 	"encoding/json"
 	"encoding/xml"
-	//"fmt"
 	"html/template"
 	"io"
 	"net/http"

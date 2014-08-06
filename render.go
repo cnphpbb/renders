@@ -1,4 +1,4 @@
-package render
+package renders
 
 import (
 	"fmt"
@@ -47,70 +47,73 @@ func loadTemplates(funcMap template.FuncMap) (map[string]*template.Template, err
 	templates := make(map[string]*template.Template)
 
 	err := filepath.Walk(basePath, func(path string, fi os.FileInfo, err error) error {
+		r, err := filepath.Rel(basePath, path)
 		if err != nil {
-			return nil
-		}
-		ext := getExt(path)
-
-		if fi.IsDir() || !strings.HasSuffix(path, ext) {
-			return nil
+			return err
 		}
 
-		if err := add(path); err != nil {
-			panic(err)
-		}
+		ext := getExt(r)
 
-		// Now we find all regular template definitions and check for the most recent definiton
-		for _, t := range regularTemplateDefs {
-			found := false
-			defineIdx := 0
-			// From the beginning (which should) most specifc we look for definitions
-			for _, nt := range cache {
-				nt.Src = re_defineTag.ReplaceAllStringFunc(nt.Src, func(raw string) string {
-					parsed := re_defineTag.FindStringSubmatch(raw)
-					name := parsed[1]
-					if name != t {
-						return raw
+		for _, extension := range exts {
+			if ext == extension {
+				if err := add(path); err != nil {
+					panic(err)
+				}
+
+				// Now we find all regular template definitions and check for the most recent definiton
+				for _, t := range regularTemplateDefs {
+					found := false
+					defineIdx := 0
+					// From the beginning (which should) most specifc we look for definitions
+					for _, nt := range cache {
+						nt.Src = re_defineTag.ReplaceAllStringFunc(nt.Src, func(raw string) string {
+							parsed := re_defineTag.FindStringSubmatch(raw)
+							name := parsed[1]
+							if name != t {
+								return raw
+							}
+							// Don't touch the first definition
+							if !found {
+								found = true
+								return raw
+							}
+
+							defineIdx += 1
+
+							return fmt.Sprintf("{{ define \"%s_invalidated_#%d\" }}", name, defineIdx)
+						})
 					}
-					// Don't touch the first definition
-					if !found {
-						found = true
-						return raw
+				}
+
+				var (
+					baseTmpl *template.Template
+					i        int
+				)
+
+				for _, nt := range cache {
+					var currentTmpl *template.Template
+					if i == 0 {
+						baseTmpl = template.New(nt.Name)
+						currentTmpl = baseTmpl
+					} else {
+						currentTmpl = baseTmpl.New(nt.Name)
 					}
 
-					defineIdx += 1
+					template.Must(currentTmpl.Funcs(funcMap).Parse(nt.Src))
+					i++
+				}
+				tname := generateTemplateName(basePath, path)
+				templates[tname] = baseTmpl
 
-					return fmt.Sprintf("{{ define \"%s_invalidated_#%d\" }}", name, defineIdx)
-				})
+				// Make sure we empty the cache between runs
+				cache = cache[0:0]
+
+				break
+				//return nil
 			}
 		}
-
-		var (
-			baseTmpl *template.Template
-			i        int
-		)
-
-		for _, nt := range cache {
-			var currentTmpl *template.Template
-			if i == 0 {
-				baseTmpl = template.New(nt.Name)
-				currentTmpl = baseTmpl
-			} else {
-				currentTmpl = baseTmpl.New(nt.Name)
-			}
-			//currentTmpl.Funcs(funcMap)
-			//if _, err := currentTmpl.Parse(nt.Src); err != nil {
-			//	return err
-			//}
-			template.Must(currentTmpl.Funcs(funcMap).Parse(nt.Src))
-			i++
-		}
-		templates[generateTemplateName(basePath, path)] = baseTmpl
-
-		// Make sure we empty the cache between runs
-		cache = cache[0:0]
-
 		return nil
+
 	})
 
 	return templates, err

@@ -1,4 +1,4 @@
-package render
+package renders
 
 import (
 	"errors"
@@ -9,6 +9,7 @@ import (
 )
 
 func generateTemplateName(base, path string) string {
+	//name := (r[0 : len(r)-len(ext)])
 	return filepath.ToSlash(path[len(base)+1:])
 }
 
