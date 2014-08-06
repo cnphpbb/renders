@@ -3,7 +3,7 @@ package main
 import (
 	"github.com/go-martini/martini"
 
-	"renders"
+	"github.com/cnphpbb/renders"
 )
 
 func main() {

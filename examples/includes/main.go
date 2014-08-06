@@ -5,7 +5,7 @@ import (
 	"log"
 	"net/http"
 
-	"go-render/render"
+	"github.com/cnphpbb/render"
 )
 
 var templates map[string]*template.Template
@@ -16,12 +16,16 @@ func main() {
 			log.Println(err)
 		}
 	})
-	log.Println("web server listening at :9080")
-	log.Fatal(http.ListenAndServe(":9080", nil))
+	log.Println("web server listening at :8008")
+	log.Fatal(http.ListenAndServe(":8008", nil))
 }
 
 func init() {
 	var tmplErr error
+	opt := &renders.Options{
+		Directory:  "templates",
+		Extensions: []string{".html"},
+	}
 	if templates, tmplErr = render.Load("templates"); tmplErr != nil {
 		panic(tmplErr)
 	}

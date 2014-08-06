@@ -5,7 +5,7 @@ import (
 	"log"
 	"net/http"
 
-	"renders"
+	"github.com/cnphpbb/renders"
 )
 
 var templates map[string]*template.Template
@@ -26,8 +26,8 @@ func main() {
 			log.Println(err)
 		}
 	})
-	log.Println("web server listening at :8002")
-	log.Fatal(http.ListenAndServe(":8002", nil))
+	log.Println("web server listening at :8008")
+	log.Fatal(http.ListenAndServe(":8008", nil))
 }
 
 func init() {
