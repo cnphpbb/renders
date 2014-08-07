@@ -73,6 +73,7 @@ type Options struct {
 func Renderer(options ...Options) martini.Handler {
 	opt := prepareOptions(options)
 	cs := prepareCharset(opt.Charset)
+	compile(opt)
 	bufpool = bpool.NewBufferPool(64)
 	return func(res http.ResponseWriter, req *http.Request, c martini.Context) {
 		if martini.Env == martini.Dev {
